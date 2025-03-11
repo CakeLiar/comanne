@@ -163,7 +163,6 @@ class BaseAgent:
             }
         ] + self.memory.get_history()
 
-        print("sending message")
 
         response = self.client.chat.completions.create(
             messages=messages,

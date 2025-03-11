@@ -45,20 +45,25 @@ class DiagnosisOutputSchema(BaseIOSchema):
         ..., description="The parameter for the selected tool"
     )
 
-class SearcherInputSchema(BaseIOSchema):
+class JudgeInputSchema(BaseIOSchema):
     """Input schema for the Diagnosis Agent. Contains the code to be processed"""
 
-    thingthong: str = Field(..., description="The raw changes.")
+    results: list = Field(..., description="Results of search.")
+    commit_title: str = Field(..., description="Commit title.")
+    changes_made: str = Field(..., description="The raw changes.")
+    relevant_code: str = Field(..., description="Complete files changed.")
 
 
-class SearcherOutputSchema(BaseIOSchema):
-    """Combined output schema for the Searcher Agent. """
+class JudgeOutputSchema(BaseIOSchema):
+    """Combined output schema for the Diagnosis Agent. """
 
-    recommendations: str= Field(..., description="Suggested improvements and best practices for the code")
-    code_cohesion: int=Field(..., description="Score from 1-100 rating how well the code components work together")
-    data_structures_use: int=Field(..., description="Score from 1-100 rating the appropriate use of data structures")
-    molularity: int=Field(..., description="Score from 1-100 rating how well the code is broken into modular components")
-    dependencies: int=Field(..., description="Score from 1-100 rating how well dependencies are managed and organized")
+    recommendations: str= Field(..., description="Suggested improvements and best practices for the code.")
+
+    code_cohesion: int=Field(..., description="Score from 1-100 rating how well the code components work together.")
+    data_structures_use: int=Field(..., description="Score from 1-100 rating the appropriate use of data structures. ")
+    molularity: int=Field(..., description="Score from 1-100 rating how well the code is broken into modular components. ")
+    dependencies: int=Field(..., description="Score from 1-100 rating how well dependencies are managed and organized. ")
+
 
 
 class FinalAnswerSchema(BaseIOSchema):
