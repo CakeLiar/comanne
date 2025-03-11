@@ -47,9 +47,7 @@ class JudgeAgentConfig(BaseAgentConfig):
     """Configuration for the Diagnostic Agent."""
 
 
-######################
-#   DIAGNOSIS AGENT  #
-######################
+
 
 llm = AzureOpenAI(
     azure_deployment=os.getenv("DEPLOYMENT_NAME"),
@@ -57,7 +55,10 @@ llm = AzureOpenAI(
     api_version=os.getenv("API_VERSION"),
     api_key=os.getenv("AZURE_OPENAI_API_KEY"),
 )
-        
+
+######################
+#   DIAGNOSIS AGENT  #
+######################
 
 diagnosis_agent = BaseAgent(
     BaseAgentConfig(
@@ -76,6 +77,10 @@ diagnosis_agent = BaseAgent(
         output_schema=DiagnosisOutputSchema,
     )
 )
+
+######################
+#   JUDGEMENT AGENT  #
+######################
 
 judge_agent = BaseAgent(
     BaseAgentConfig(
@@ -96,11 +101,6 @@ judge_agent = BaseAgent(
 
 
 
-
-# Register the current date provider
-# diagnosis_agent.register_context_provider("current_date", CurrentDateProvider("Current Date"))
-
-
 def execute_tool(
     searxng_tool: SearxNGSearchTool,  _output: DiagnosisOutputSchema
 ) -> Union[SearxNGSearchToolOutputSchema, DiagnosisToolOutputSchema]:
@@ -109,9 +109,41 @@ def execute_tool(
     else:
         raise ValueError(f"Unknown tool: {_output.tool}")
 
-#################
-# EXAMPLE USAGE #
-#################
+
+def process_commit (
+        changes_made: str,
+        commit_title: str,
+        relevant_code: str,
+) -> str:
+    input_schema = DiagnosisInputSchema(changes_made=changes_made, commit_title=commit_title, relevant_code=relevant_code)
+    
+    _output = diagnosis_agent.run(input_schema)
+
+    # Look up best practices
+    response = execute_tool(searxng_tool, _output)
+    
+    output_syntax = Syntax(str(response.model_dump_json(indent=2)), "json", theme="monokai", line_numbers=True)
+
+    try:
+        final_input_schema = JudgeInputSchema(changes_made=changes_made, commit_title=commit_title, relevant_code=relevant_code, results=json.loads(output_syntax.code)['results'])
+        result = judge_agent.run(final_input_schema)
+    except:
+        return None
+    
+    # Return the judge output
+    
+    final_output_syntax = Syntax(
+        str(result.model_dump_json(indent=2)), "json", theme="monokai", line_numbers=True
+    )
+
+    # Reset the memory after each response
+
+    diagnosis_agent.memory = AgentMemory()
+    judge_agent.memory = AgentMemory()
+
+    return final_output_syntax;
+    
+    
 if __name__ == "__main__":
     import os
     from rich.console import Console
@@ -161,7 +193,6 @@ if __name__ == "__main__":
     for user_input in inputs:
         
         input_schema = DiagnosisInputSchema(changes_made=commit_infos[0][1], commit_title=commit_message, relevant_code=commit_infos[0][0])
-        #input_schema = DiagnosisInputSchema(changes_made="cool commit", commit_title=commit_message, relevant_code="def minecraft();")
 
         _output = diagnosis_agent.run(input_schema)
 
