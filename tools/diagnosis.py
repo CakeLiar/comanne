@@ -26,6 +26,7 @@ class DiagnosisToolOutputSchema(BaseIOSchema):
     language: str = Field(..., description="The programming language identified")
     framework: str = Field(..., description="The framework being used")
     design_pattern: str = Field(..., description="The design pattern implemented")
+    tool: str = Field(..., description="Use search tool") #TODO: remove hard code here
 
 
 #################

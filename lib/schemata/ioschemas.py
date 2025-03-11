@@ -40,10 +40,10 @@ class DiagnosisOutputSchema(BaseIOSchema):
     design_pattern: str=Field(..., description="Codebase design pattern") 
     commit_goal: str=Field(..., description="The goal of the commit")
 
-    #tool: str = Field(..., description="The tool to use: 'search'")
-    #tool_parameters: Union[SearxNGSearchToolInputSchema] = Field(
-    #    ..., description="The parameter for the selected tool"
-    #)
+    tool: str = Field(..., description="The tool to use: 'search'")
+    tool_parameters: Union[SearxNGSearchToolInputSchema] = Field(
+        ..., description="The parameter for the selected tool"
+    )
 
 class SearcherInputSchema(BaseIOSchema):
     """Input schema for the Diagnosis Agent. Contains the code to be processed"""

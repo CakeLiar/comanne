@@ -1,9 +1,11 @@
 from typing import Union
 import openai
+from openai import AzureOpenAI
 from pydantic import Field
 
 import json
 import requests
+import os
 
 
 from atomic_agents.agents.base_agent import BaseAgent, BaseAgentConfig
@@ -46,9 +48,19 @@ class DiagnosticAgentConfig(BaseAgentConfig):
 #   DIAGNOSIS AGENT  #
 ######################
 
+print(os.getenv("AZURE_OPENAI_API_KEY"))
+
+llm = AzureOpenAI(
+    azure_deployment=os.getenv("DEPLOYMENT_NAME"),
+    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+    api_version=os.getenv("API_VERSION"),
+    api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+)
+        
+
 diagnosis_agent = BaseAgent(
     BaseAgentConfig(
-        client=instructor.from_openai(openai.OpenAI()),
+        client=instructor.from_openai(llm),
         model="gpt-4o-mini",
         system_prompt_generator=SystemPromptGenerator( 
             background=[
@@ -94,7 +106,7 @@ if __name__ == "__main__":
 
     load_dotenv()
 
-    client = instructor.from_openai(openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY")))
+    client = instructor.from_openai(llm)
 
     # Initialize the tools
     searxng_tool = SearxNGSearchTool(SearxNGSearchToolConfig(base_url="http://localhost:8080", max_results=5))
@@ -130,7 +142,6 @@ if __name__ == "__main__":
     for user_input in inputs:
         print("minecrafting ")
         
-        console.print(Panel(f"[bold cyan]User Input:[/bold cyan] {user_input[:100]+"..."}", expand=False))
         #input_schema = DiagnosisInputSchema(changes_made=commit_infos[0][1], commit_title=commit_message, relevant_code=commit_infos[0][0])
         input_schema = DiagnosisInputSchema(changes_made="cool commit", commit_title=commit_message, relevant_code="def minecraft();")
 
@@ -142,12 +153,12 @@ if __name__ == "__main__":
         )
         console.print(diagnosis_syntax)
 
-        #response = execute_tool(searxng_tool, _output)
+        response = execute_tool(searxng_tool, _output)
 
         # Print the tool output
-        #console.print("\n[bold green]Tool Output:[/bold green]")
-        #output_syntax = Syntax(str(response.model_dump_json(indent=2)), "json", theme="monokai", line_numbers=True)
-        #console.print(output_syntax)
+        console.print("\n[bold green]Tool Output:[/bold green]")
+        output_syntax = Syntax(str(response.model_dump_json(indent=2)), "json", theme="monokai", line_numbers=True)
+        console.print(output_syntax)
 
         # Reset the memory after each response
 

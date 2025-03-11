@@ -1,3 +1,4 @@
+import os
 import instructor
 from pydantic import BaseModel, Field
 from typing import Optional, Type
@@ -382,13 +383,25 @@ if __name__ == "__main__":
             streaming (bool): Whether to use streaming mode for responses
         """
 
+        llm1 = AsyncAzureOpenAI(
+            azure_deployment=os.getenv("DEPLOYMENT_NAME"),
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+            api_version=os.getenv("API_VERSION"),
+            api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        )
+        llm2 = AzureOpenAI(
+            azure_deployment=os.getenv("DEPLOYMENT_NAME"),
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+            api_version=os.getenv("API_VERSION"),
+            api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        )
         
         if streaming:
-            client = instructor.from_openai(AsyncOpenAI())
+            client = instructor.from_openai(llm2)
             config = BaseAgentConfig(client=client, model="gpt-4o-mini")
             agent = BaseAgent(config)
         else:
-            client = instructor.from_openai(OpenAI())
+            client = instructor.from_openai(llm1)
             config = BaseAgentConfig(client=client, model="gpt-4o-mini")
             agent = BaseAgent(config)
 
